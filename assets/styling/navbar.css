@@ -1,0 +1,21 @@
+#navbar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background-color: darkblue;
+  min-height: 100vh;
+  width: 100px;
+  padding-top: 20px;
+}
+
+#navbar a {
+  color: aliceblue;
+  text-decoration: none;
+  height: 40px;
+  transition: color 0.2s ease;
+}
+
+#navbar a:hover {
+  cursor: pointer;
+  color: #91a4d2;
+}

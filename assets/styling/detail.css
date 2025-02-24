@@ -1,0 +1,73 @@
+#income-list .income-summary .income-total .income-total-amount {
+    margin-left: 20px;
+}
+
+#income-list .income-summary .income-total .income-total-amount span {
+    color: lightgreen;
+    font-size: 20px;
+    margin-right: 10px;
+}
+
+#income-list table {
+    width: 100%;
+    table-layout: fixed;
+}
+
+#income-list th, #income-list td {
+    text-align: center;
+    width: 20%;
+}
+
+#income-list td input {
+    width: 100%;
+}
+
+#income-list td button {
+    width: 80px;
+}
+
+#income-list td.amount {
+    text-align: right;
+    color: lightgreen;
+}
+
+#income-list .income-add {
+    text-align: center;
+}
+
+#outcome-list .outcome-summary .outcome-total .outcome-total-amount {
+    margin-left: 20px;
+}
+
+#outcome-list .outcome-summary .outcome-total .outcome-total-amount span {
+    color: red;
+    font-size: 20px;
+    margin-right: 10px;
+}
+
+#outcome-list table {
+    width: 100%;
+    table-layout: fixed;
+}
+
+#outcome-list th, #outcome-list td {
+    text-align: center;
+    width: 20%;
+}
+
+#outcome-list td input {
+    width: 100%;
+}
+
+#outcome-list td button {
+    width: 80px;
+}
+
+#outcome-list td.amount {
+    color: red;
+    text-align: right;
+}
+
+#outcome-list .outcome-add {
+    text-align: center;
+}
