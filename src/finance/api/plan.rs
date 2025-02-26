@@ -4,7 +4,12 @@ use rust_decimal::Decimal;
 use std::str::FromStr;
 
 use super::plan_service;
-use super::plan_service::{get_part_time_job_repo, PartTimeJobRepo};
+use super::plan_service::{
+    get_part_time_job_repo,
+    PartTimeJobRepo,
+    get_monthly_outcome_repo,
+};
+use crate::finance::plan::monthly_outcome::MonthlyOutcomeRepo;
 use crate::finance::setting::get_opening_and_closing_date;
 
 #[derive(Debug, Clone, PartialEq)]
@@ -22,6 +27,14 @@ pub struct PartTimeJobIncomeSchema {
     pub hour: Decimal,
     pub payment_date: String,
     pub total: Decimal,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct MonthlyOutcomeSchema {
+    pub id: u64,
+    pub name: String,
+    pub amount: Decimal,
+    pub payment_date: String,
 }
 
 pub fn get_incomes(year: i32, month: u32) -> Vec<IncomeSchema> {
@@ -159,4 +172,50 @@ pub fn update_part_time_job_income(
     if let Err(e) = repo.update_part_time_job_income(income) {
         tracing::error!("Failed to update part-time job income: {}", e);
     }
+}
+
+pub fn get_monthly_outcomes(year: i32, month: u32) -> Vec<MonthlyOutcomeSchema> {
+    let repo = get_monthly_outcome_repo();
+    let (start_date, end_date) = match get_opening_and_closing_date(year, month) {
+        Ok((start_date, end_date)) => (start_date, end_date),
+        Err(e) => {
+            tracing::error!("Failed to get opening and closing date: {}", e);
+            return vec![];
+        }
+    };
+    let templates = match repo.list_monthly_outcome_template(&start_date, &end_date) {
+        Ok(templates) => templates,
+        Err(e) => {
+            tracing::error!("Failed to get monthly outcome templates: {}", e);
+            return vec![];
+        }
+    };
+    templates
+        .into_iter()
+        .map(|template| {
+            let payment_date = template.get_payment_date(year, month).unwrap();
+            if let Ok(Some(outcome)) = &repo.get_monthly_outcome_by_template_id(
+                template.id.unwrap(),
+                payment_date.year(),
+                payment_date.month(),
+            ) {
+                return MonthlyOutcomeSchema {
+                    id: outcome.id.unwrap(),
+                    name: outcome.name.clone(),
+                    amount: outcome.amount,
+                    payment_date: outcome.payment_date.date_naive().to_string(),
+                };
+            } else {
+                let outcome = template
+                    .to_monthly_outcome(year, month, &repo)
+                    .unwrap();
+                return MonthlyOutcomeSchema {
+                    id: outcome.id.unwrap(),
+                    name: outcome.name,
+                    amount: outcome.amount,
+                    payment_date: outcome.payment_date.date_naive().to_string(),
+                };
+            }
+        })
+        .collect()
 }

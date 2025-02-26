@@ -6,6 +6,7 @@ use crate::util::get_next_ym;
 use crate::components::plan::{CombinedList, PartTimeJobIncomes};
 use crate::finance::api::plan::{
     get_incomes, get_part_time_job_incomes, update_part_time_job_income,
+    get_monthly_outcomes,
 };
 
 const PLAN_CSS: Asset = asset!("/assets/styling/plan.css");
@@ -22,11 +23,15 @@ pub fn Plan() -> Element {
     let mut part_time_job_incomes = use_signal(|| vec![]);
     let mut incomes = use_signal(|| vec![]);
     let mut next_month_incomes = use_signal(|| vec![]);
+    let mut outcomes = use_signal(|| vec![]);
+    let mut next_month_outcomes = use_signal(|| vec![]);
 
     use_effect(move || {
         part_time_job_incomes.set(get_part_time_job_incomes(year(), month()));
         incomes.set(get_incomes(year(), month()));
+        outcomes.set(get_monthly_outcomes(year(), month()));
         next_month_incomes.set(get_incomes(next_year(), next_month()));
+        next_month_outcomes.set(get_monthly_outcomes(next_year(), next_month()));
     });
 
     let mut handle_change_year_month = move |y: i32, m: u32| {
@@ -40,7 +45,9 @@ pub fn Plan() -> Element {
         update_part_time_job_income(id, name, hourly_wage, hour, payment_date);
         part_time_job_incomes.set(get_part_time_job_incomes(year(), month()));
         incomes.set(get_incomes(year(), month()));
+        outcomes.set(get_monthly_outcomes(year(), month()));
         next_month_incomes.set(get_incomes(next_year(), next_month()));
+        next_month_outcomes.set(get_monthly_outcomes(next_year(), next_month()));
     };
 
     rsx! {
@@ -74,7 +81,7 @@ pub fn Plan() -> Element {
             onchange: move |e| handle_change_year_month(year(), e.value().parse().unwrap_or(1))
         }
         PartTimeJobIncomes { year, month, part_time_job_incomes, handle_edit_part_time_job }
-        CombinedList { year, month, incomes }
-        CombinedList { year: next_year, month: next_month, incomes: next_month_incomes }
+        CombinedList { year, month, incomes, outcomes }
+        CombinedList { year: next_year, month: next_month, incomes: next_month_incomes, outcomes: next_month_outcomes }
     }
 }
