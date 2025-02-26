@@ -3,8 +3,9 @@ use crate::finance::detail::update_saving;
 use super::detail_service;
 use super::detail_service::{
     get_adjustment_repo, get_income_repo, get_outcome_repo, get_saving_repo,
-    setting::get_opening_and_closing_date, Income, IncomeRepo, Outcome, OutcomeRepo, SavingRepo,
+    Income, IncomeRepo, Outcome, OutcomeRepo, SavingRepo,
 };
+use crate::finance::setting::get_opening_and_closing_date;
 use chrono::{DateTime, Datelike, Local, NaiveDate};
 use dioxus::logger::tracing;
 use rust_decimal::prelude::*;

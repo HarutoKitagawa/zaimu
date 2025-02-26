@@ -1,0 +1,34 @@
+#job-list table {
+    width: 100%;
+    table-layout: fixed;
+}
+
+#job-list th, #job-list td {
+    text-align: center;
+    width: 20%;
+}
+
+#job-list td input {
+    width: 100%;
+}
+
+#job-list td button {
+    width: 80px;
+}
+
+#job-list td.amount {
+    text-align: right;
+}
+
+#combined-list table {
+    table-layout: fixed;
+}
+
+#combined-list th, #combined-list td {
+    text-align: center;
+    width: 20%;
+}
+
+#combined-list td.amount {
+    text-align: right;
+}

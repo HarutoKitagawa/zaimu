@@ -1,4 +1,3 @@
-pub mod setting;
 pub mod income;
 pub mod outcome;
 pub mod adjustment;
