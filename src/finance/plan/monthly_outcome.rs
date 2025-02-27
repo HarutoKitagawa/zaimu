@@ -1,6 +1,8 @@
-use crate::util::get_end_of_month;
 use chrono::{DateTime, Local, TimeZone};
 use rust_decimal::Decimal;
+use crate::util::get_end_of_month;
+use crate::finance::setting::get_opening_and_closing_date;
+use super::outcome::{Outcome, ToOutcome, OutcomeRepo};
 
 #[derive(Debug, Clone)]
 pub enum PaymentTiming {
@@ -62,6 +64,16 @@ impl MonthlyOutcomeTemplate {
     }
 }
 
+impl ToOutcome for MonthlyOutcome {
+    fn to_outcome(&self) -> Outcome {
+        Outcome {
+            name: self.name.clone(),
+            amount: self.amount.clone(),
+            date: self.payment_date,
+        }
+    }
+}
+
 impl MonthlyOutcome {
     pub fn update(
         &self,
@@ -79,7 +91,7 @@ impl MonthlyOutcome {
     }
 }
 
-pub trait MonthlyOutcomeRepo {
+pub trait MonthlyOutcomeRepo: OutcomeRepo {
     fn list_monthly_outcome_template(
         &self,
         start_date: &DateTime<Local>,
@@ -93,4 +105,25 @@ pub trait MonthlyOutcomeRepo {
         year: i32,
         month: u32,
     ) -> Result<Option<MonthlyOutcome>, anyhow::Error>;
+}
+
+pub fn get_or_create_outcomes(
+    year: i32,
+    month: u32,
+    repo: &impl MonthlyOutcomeRepo,
+) -> Result<Vec<Outcome>, anyhow::Error> {
+    let (start_date, end_date) = get_opening_and_closing_date(year, month)?;
+    let templates = repo.list_monthly_outcome_template(&start_date, &end_date)?;
+
+    let mut outcomes = Vec::new();
+
+    for template in templates {
+        let outcome = match repo.get_monthly_outcome_by_template_id(template.id.unwrap(), year, month)? {
+            Some(existing_outcome) => existing_outcome,
+            None => template.to_monthly_outcome(year, month, repo)?,
+        };
+        outcomes.push(outcome.to_outcome());
+    }
+
+    Ok(outcomes)
 }

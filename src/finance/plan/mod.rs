@@ -1,8 +1,10 @@
 pub mod income;
+pub mod outcome;
 pub mod job;
 pub mod temporary_income;
 pub mod monthly_outcome;
 pub mod repository;
+pub mod future_inspector;
 
 pub use income::get_incomes;
 pub use job::PartTimeJobRepo;

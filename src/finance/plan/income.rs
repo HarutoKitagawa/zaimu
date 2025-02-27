@@ -1,6 +1,7 @@
 use chrono::{DateTime, Local};
 use rust_decimal::Decimal;
 
+#[derive(Debug, Clone)]
 pub struct Income {
     pub name: String,
     pub amount: Decimal,

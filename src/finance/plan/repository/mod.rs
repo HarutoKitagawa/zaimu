@@ -1,5 +1,6 @@
 use super::job;
 use super::income;
+use super::outcome;
 use super::monthly_outcome;
 mod db_dummy;
 use db_dummy::{DummyPartTimeJobRepo, DummyMonthlyOutcomeRepo};

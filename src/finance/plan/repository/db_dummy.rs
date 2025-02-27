@@ -3,6 +3,7 @@ use super::job;
 use super::job::{PartTimeHourlyWage, PartTimeJob, PartTimeJobIncome, PartTimeJobRepo};
 use super::monthly_outcome;
 use super::monthly_outcome::{MonthlyOutcome, MonthlyOutcomeRepo, MonthlyOutcomeTemplate};
+use super::outcome::{Outcome, OutcomeRepo, ToOutcome};
 use chrono::prelude::*;
 use rust_decimal_macros::dec;
 use std::vec;
@@ -327,6 +328,26 @@ impl MonthlyOutcomeRepo for DummyMonthlyOutcomeRepo {
                         && outcome.payment_date.month() == month
                 })
                 .cloned()
+        }))
+    }
+}
+
+impl OutcomeRepo for DummyMonthlyOutcomeRepo {
+    fn list_outcomes(
+        &self,
+        start_date: &DateTime<Local>,
+        end_date: &DateTime<Local>,
+    ) -> Result<Vec<Outcome>, anyhow::Error> {
+        Ok(MONTHLY_OUTCOME_COLLECTION.with(|collection| {
+            collection
+                .borrow()
+                .clone()
+                .into_iter()
+                .filter(|(_, outcome)| {
+                    outcome.payment_date >= *start_date && outcome.payment_date <= *end_date
+                })
+                .map(|(_, outcome)| outcome.to_outcome())
+                .collect()
         }))
     }
 }

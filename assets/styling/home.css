@@ -1,0 +1,8 @@
+#future-inspect-result-list table {
+    width: 100%;
+    table-layout: fixed;
+}
+
+.amount {
+    text-align: right;
+}

@@ -4,11 +4,16 @@ use rust_decimal::Decimal;
 use std::str::FromStr;
 
 use super::plan_service;
+use super::plan_service::future_inspector;
+use super::plan_service::future_inspector::{BalanceStatus, InspectResult};
 use super::plan_service::{
     get_part_time_job_repo,
     PartTimeJobRepo,
     get_monthly_outcome_repo,
+    job::get_or_create_incomes,
+    monthly_outcome::get_or_create_outcomes,
 };
+use crate::finance::detail::get_saving_repo;
 use crate::finance::plan::monthly_outcome::MonthlyOutcomeRepo;
 use crate::finance::setting::get_opening_and_closing_date;
 
@@ -35,6 +40,14 @@ pub struct MonthlyOutcomeSchema {
     pub name: String,
     pub amount: Decimal,
     pub payment_date: String,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct FutureInspectResultSchema {
+    pub date: String,
+    pub amount: Decimal,
+    pub incomes: String,
+    pub outcomes: String,
 }
 
 pub fn get_incomes(year: i32, month: u32) -> Vec<IncomeSchema> {
@@ -218,4 +231,70 @@ pub fn get_monthly_outcomes(year: i32, month: u32) -> Vec<MonthlyOutcomeSchema> 
             }
         })
         .collect()
+}
+
+pub fn get_future_inspect(year: i32, month: u32) -> Vec<FutureInspectResultSchema> {
+    let part_time_job_repo = get_part_time_job_repo();
+    let monthly_outcome_repo = get_monthly_outcome_repo();
+    let saving_repo = get_saving_repo();
+
+    match future_inspector::inspect(
+        (year, month),
+        (year + 2, month),
+        &saving_repo,
+        vec![move |year, month| get_or_create_incomes(year, month, &part_time_job_repo)],
+        vec![move |year, month| get_or_create_outcomes(year, month, &monthly_outcome_repo)],
+    ) {
+        Ok(results) => {
+            results
+                .into_iter()
+                .map(|result| {
+                    match result {
+                        InspectResult {
+                            date,
+                            balance_status: BalanceStatus::Surplus(amount),
+                            incomes,
+                            outcomes,
+                        } => FutureInspectResultSchema {
+                            date: date.date_naive().to_string(),
+                            amount,
+                            incomes: incomes
+                                .iter()
+                                .map(|income| income.name.clone() + ": " + &income.amount.to_string())
+                                .collect::<Vec<String>>()
+                                .join(", "),
+                            outcomes: outcomes
+                                .iter()
+                                .map(|outcome| outcome.name.clone() + ": " + &outcome.amount.to_string())
+                                .collect::<Vec<String>>()
+                                .join(", "),
+                        },
+                        InspectResult {
+                            date,
+                            balance_status: BalanceStatus::Deficit(amount),
+                            incomes,
+                            outcomes,
+                        } => FutureInspectResultSchema {
+                            date: date.date_naive().to_string(),
+                            amount: -amount,
+                            incomes: incomes
+                                .iter()
+                                .map(|income| income.name.clone() + ": " + &income.amount.to_string())
+                                .collect::<Vec<String>>()
+                                .join(", "),
+                            outcomes: outcomes
+                                .iter()
+                                .map(|outcome| outcome.name.clone() + ": " + &outcome.amount.to_string())
+                                .collect::<Vec<String>>()
+                                .join(", "),
+                        }
+                    }
+                })
+                .collect()
+        },
+        Err(e) => {
+            tracing::error!("Failed to inspect future: {}", e);
+            vec![]
+        },
+    }
 }

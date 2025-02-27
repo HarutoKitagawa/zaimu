@@ -1,7 +1,8 @@
-use crate::util::{get_end_of_month, get_next_ym};
-use chrono::{DateTime, Local, TimeZone};
+use chrono::{DateTime, Local, TimeZone, Datelike};
 use rust_decimal::Decimal;
 use super::income::{Income, ToIncome, IncomeRepo};
+use crate::util::{get_end_of_month, get_next_ym};
+use crate::finance::setting::get_opening_and_closing_date;
 
 // 入金日
 // 月末, 月中(何日か)
@@ -211,4 +212,28 @@ pub trait PartTimeJobRepo: IncomeRepo {
         &self,
         part_time_job_income: PartTimeJobIncome,
     ) -> Result<(), anyhow::Error>;
+}
+
+pub fn get_or_create_incomes(
+    year: i32,
+    month: u32,
+    repo: &impl PartTimeJobRepo,
+) -> Result<Vec<Income>, anyhow::Error> {
+    let (start_date, end_date) = get_opening_and_closing_date(year, month)?;
+    let part_time_jobs = repo.list_part_time_jobs(&start_date, &end_date)?;
+
+    let mut incomes = Vec::new();
+    for job in part_time_jobs {
+        let job_payment_date = job.get_payment_date(year, month)?;
+        let income = match repo.get_part_time_job_income_by_part_time_job_id(
+            job.id.unwrap(),
+            job_payment_date.year(),
+            job_payment_date.month(),
+        )? {
+            Some(income) => income,
+            None => job.to_part_time_job_income(year, month, Decimal::ZERO, repo)?,
+        };
+        incomes.push(income.to_income());
+    }
+    Ok(incomes)
 }
