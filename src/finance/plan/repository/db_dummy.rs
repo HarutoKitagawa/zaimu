@@ -1,8 +1,8 @@
 use super::income::{Income, IncomeRepo, ToIncome};
-use super::job;
-use super::job::{PartTimeHourlyWage, PartTimeJob, PartTimeJobIncome, PartTimeJobRepo};
-use super::monthly_outcome;
-use super::monthly_outcome::{MonthlyOutcome, MonthlyOutcomeRepo, MonthlyOutcomeTemplate};
+use super::income::job;
+use super::income::job::{PartTimeHourlyWage, PartTimeJob, PartTimeJobIncome, PartTimeJobRepo};
+use super::outcome::monthly_outcome;
+use super::outcome::monthly_outcome::{MonthlyOutcome, MonthlyOutcomeRepo, MonthlyOutcomeTemplate};
 use super::outcome::{Outcome, OutcomeRepo, ToOutcome};
 use chrono::prelude::*;
 use rust_decimal_macros::dec;

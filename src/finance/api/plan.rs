@@ -10,11 +10,11 @@ use super::plan_service::{
     get_part_time_job_repo,
     PartTimeJobRepo,
     get_monthly_outcome_repo,
-    job::get_or_create_incomes,
-    monthly_outcome::get_or_create_outcomes,
+    income::job::get_or_create_incomes,
+    outcome::monthly_outcome::get_or_create_outcomes,
 };
 use crate::finance::detail::get_saving_repo;
-use crate::finance::plan::monthly_outcome::MonthlyOutcomeRepo;
+use crate::finance::plan::outcome::monthly_outcome::MonthlyOutcomeRepo;
 use crate::finance::setting::get_opening_and_closing_date;
 
 #[derive(Debug, Clone, PartialEq)]
