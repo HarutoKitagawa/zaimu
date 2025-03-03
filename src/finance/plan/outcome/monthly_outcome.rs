@@ -107,7 +107,7 @@ pub trait MonthlyOutcomeRepo: OutcomeRepo {
     ) -> Result<Option<MonthlyOutcome>, anyhow::Error>;
 }
 
-pub fn get_or_create_outcomes(
+pub fn get_or_create_monthly_outcomes(
     year: i32,
     month: u32,
     repo: &impl MonthlyOutcomeRepo,

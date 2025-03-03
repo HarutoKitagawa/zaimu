@@ -214,7 +214,7 @@ pub trait PartTimeJobRepo: IncomeRepo {
     ) -> Result<(), anyhow::Error>;
 }
 
-pub fn get_or_create_incomes(
+pub fn get_or_create_part_time_job_incomes(
     year: i32,
     month: u32,
     repo: &impl PartTimeJobRepo,

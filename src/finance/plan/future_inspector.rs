@@ -21,16 +21,13 @@ pub struct InspectResult {
     pub outcomes: Vec<Outcome>,
 }
 
-pub fn inspect<I, O>(
+pub fn inspect(
     start_ym: (i32, u32),
     end_ym: (i32, u32),
     saving_repo: &impl SavingRepo,
-    income_factories: Vec<I>,
-    outcome_factories: Vec<O>,
+    income_factories: Vec<Box<dyn Fn(i32, u32) -> Result<Vec<Income>, anyhow::Error>>>,
+    outcome_factories: Vec<Box<dyn Fn(i32, u32) -> Result<Vec<Outcome>, anyhow::Error>>>,
 ) -> Result<Vec<InspectResult>, anyhow::Error>
-where
-    I: Fn(i32, u32) -> Result<Vec<Income>, anyhow::Error>,
-    O: Fn(i32, u32) -> Result<Vec<Outcome>, anyhow::Error>,
 {
     let mut incomes = Vec::new();
     let mut outcomes = Vec::new();

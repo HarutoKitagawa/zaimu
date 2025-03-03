@@ -3,6 +3,7 @@ use super::income::job;
 use super::income::job::{PartTimeHourlyWage, PartTimeJob, PartTimeJobIncome, PartTimeJobRepo};
 use super::outcome::monthly_outcome;
 use super::outcome::monthly_outcome::{MonthlyOutcome, MonthlyOutcomeRepo, MonthlyOutcomeTemplate};
+use super::outcome::temporary_outcome::{TemporaryOutcome, TemporaryOutcomeRepo};
 use super::outcome::{Outcome, OutcomeRepo, ToOutcome};
 use chrono::prelude::*;
 use rust_decimal_macros::dec;
@@ -72,6 +73,20 @@ thread_local! {
         }),
     ]));
     static MONTHLY_OUTCOME_COLLECTION: RefCell<HashMap<u64, MonthlyOutcome>> = RefCell::new(HashMap::from_iter(vec![]));
+    static TEMPORARY_OUTCOME_COLLECTION: RefCell<HashMap<u64, TemporaryOutcome>> = RefCell::new(HashMap::from_iter(vec![
+        (1, TemporaryOutcome {
+            id: Some(1),
+            name: "臨時支出1".to_string(),
+            amount: dec!(5000),
+            date: Local.with_ymd_and_hms(2025, 4, 21, 0, 0, 0).single().unwrap(),
+        }),
+        (2, TemporaryOutcome {
+            id: Some(2),
+            name: "臨時支出2".to_string(),
+            amount: dec!(100000),
+            date: Local.with_ymd_and_hms(2025, 5, 31, 0 , 0, 0).single().unwrap(),
+        }),
+    ]));
 }
 
 pub struct DummyPartTimeJobRepo;
@@ -353,6 +368,83 @@ impl OutcomeRepo for DummyMonthlyOutcomeRepo {
 }
 
 impl DummyMonthlyOutcomeRepo {
+    pub fn new() -> Self {
+        Self
+    }
+}
+
+pub struct DummyTemporaryOutcomeRepo;
+
+impl TemporaryOutcomeRepo for DummyTemporaryOutcomeRepo {
+    fn list_temporary_outcomes(
+        &self,
+        start_date: &DateTime<Local>,
+        end_date: &DateTime<Local>,
+    ) -> Result<Vec<TemporaryOutcome>, anyhow::Error> {
+        Ok(TEMPORARY_OUTCOME_COLLECTION.with(|collection| {
+            collection
+                .borrow()
+                .clone()
+                .into_iter()
+                .filter(|(_, outcome)| outcome.date >= *start_date && outcome.date <= *end_date)
+                .map(|(_, outcome)| outcome)
+                .collect()
+        }))
+    }
+    fn store_temporary_outcome(
+        &self,
+        temporary_outcome: TemporaryOutcome,
+    ) -> Result<u64, anyhow::Error> {
+        let id = TEMPORARY_OUTCOME_COLLECTION.with(|collection| {
+            let id = collection.borrow().len() as u64 + 1;
+            let temporary_outcome = TemporaryOutcome {
+                id: Some(id),
+                ..temporary_outcome
+            };
+            collection.borrow_mut().insert(id, temporary_outcome);
+            id
+        });
+        Ok(id)
+    }
+    fn update_temporary_outcome(
+        &self,
+        temporary_outcome: TemporaryOutcome,
+    ) -> Result<(), anyhow::Error> {
+        TEMPORARY_OUTCOME_COLLECTION.with(|collection| {
+            collection
+                .borrow_mut()
+                .insert(temporary_outcome.id.unwrap(), temporary_outcome);
+        });
+        Ok(())
+    }
+    fn get_temporary_outcome_by_id(
+        &self,
+        id: u64,
+    ) -> Result<Option<TemporaryOutcome>, anyhow::Error> {
+        Ok(TEMPORARY_OUTCOME_COLLECTION
+            .with(|collection| collection.borrow().get(&id).cloned()))
+    }
+}
+
+impl OutcomeRepo for DummyTemporaryOutcomeRepo {
+    fn list_outcomes(
+        &self,
+        start_date: &DateTime<Local>,
+        end_date: &DateTime<Local>,
+    ) -> Result<Vec<Outcome>, anyhow::Error> {
+        Ok(TEMPORARY_OUTCOME_COLLECTION.with(|collection| {
+            collection
+                .borrow()
+                .clone()
+                .into_iter()
+                .filter(|(_, outcome)| outcome.date >= *start_date && outcome.date <= *end_date)
+                .map(|(_, outcome)| outcome.to_outcome())
+                .collect()
+        }))
+    }
+}
+
+impl DummyTemporaryOutcomeRepo {
     pub fn new() -> Self {
         Self
     }

@@ -10,8 +10,12 @@ use super::plan_service::{
     get_part_time_job_repo,
     PartTimeJobRepo,
     get_monthly_outcome_repo,
-    income::job::get_or_create_incomes,
-    outcome::monthly_outcome::get_or_create_outcomes,
+    get_temporary_outcome_repo,
+    income::job::get_or_create_part_time_job_incomes,
+    outcome::{
+        monthly_outcome::get_or_create_monthly_outcomes,
+        temporary_outcome::get_temporary_outcomes,
+    },
 };
 use crate::finance::detail::get_saving_repo;
 use crate::finance::plan::outcome::monthly_outcome::MonthlyOutcomeRepo;
@@ -236,14 +240,18 @@ pub fn get_monthly_outcomes(year: i32, month: u32) -> Vec<MonthlyOutcomeSchema> 
 pub fn get_future_inspect(year: i32, month: u32) -> Vec<FutureInspectResultSchema> {
     let part_time_job_repo = get_part_time_job_repo();
     let monthly_outcome_repo = get_monthly_outcome_repo();
+    let temporary_outcome_repo = get_temporary_outcome_repo();
     let saving_repo = get_saving_repo();
 
     match future_inspector::inspect(
         (year, month),
         (year + 2, month),
         &saving_repo,
-        vec![move |year, month| get_or_create_incomes(year, month, &part_time_job_repo)],
-        vec![move |year, month| get_or_create_outcomes(year, month, &monthly_outcome_repo)],
+        vec![Box::new(move |year, month| get_or_create_part_time_job_incomes(year, month, &part_time_job_repo))],
+        vec![
+            Box::new(move |year, month| get_or_create_monthly_outcomes(year, month, &monthly_outcome_repo)),
+            Box::new(move |year, month| get_temporary_outcomes(year, month, &temporary_outcome_repo)),
+        ],
     ) {
         Ok(results) => {
             results
